@@ -30,13 +30,27 @@ Telegram bot that connects to OpenAI Assistant API and provides an admin panel f
 
 ## Running with Docker
 
+### Production Mode
+
 ```bash
 docker-compose up -d
 ```
 
 The bot and admin panel will start automatically.
 
-## Running Locally
+### Development Mode (with hot reload)
+
+```bash
+npm run dev:docker
+# Or to rebuild containers:
+npm run dev:docker:build
+```
+
+This will:
+- Start bot container with hot reload (nodemon + ts-node)
+- Mount `src/` directory for live code changes
+
+## Running Locally (without Docker)
 
 1. Install dependencies:
    ```bash
@@ -51,13 +65,19 @@ The bot and admin panel will start automatically.
 3. Start the application:
    ```bash
    npm start
+   # Or for development with auto-reload:
+   npm run dev
    ```
 
 ## Usage
 
 1. **Telegram Bot**: Send messages to your bot, and it will respond using OpenAI Assistant.
 
-2. **Admin Panel**: Visit `http://localhost:3000` (or your configured port) to edit the system prompt. Use the Basic Auth credentials from `.env`.
+2. **Admin Panel**: Visit `http://localhost:3000` (or your configured port) to:
+   - Edit the system prompt
+   - Configure thread TTL in minutes (stored in memory, resets on restart)
+   
+   Use the Basic Auth credentials from `.env`.
 
 ## Project Structure
 
@@ -77,9 +97,12 @@ The bot and admin panel will start automatically.
 
 ## Notes
 
-- Each user has their own conversation thread in OpenAI
+- Each user has their own conversation thread in OpenAI, stored in memory (Map)
 - System prompt is stored in `prompts/system-prompt.txt`
+- Thread TTL is stored in memory (default: 60 minutes, resets on restart)
 - When you update the prompt in admin panel, the assistant instructions are updated automatically
+- Thread TTL can be edited through the admin panel - new threads will use the updated TTL
 - If `OPENAI_ASSISTANT_ID` is not provided, a new assistant will be created on first use
+- Threads are stored in memory and will be lost on restart
 
 

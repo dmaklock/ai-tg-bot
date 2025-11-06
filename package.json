@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "nodemon",
+    "dev:docker": "docker-compose -f docker-compose.dev.yml up",
+    "dev:docker:build": "docker-compose -f docker-compose.dev.yml up --build",
     "bot": "ts-node src/bot/index.ts",
     "server": "ts-node src/server/index.ts"
   },
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.0",
+    "nodemon": "^3.0.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }

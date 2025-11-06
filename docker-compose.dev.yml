@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-tg-bot-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./prompts:/app/prompts
+      - ./src:/app/src
+      - /app/node_modules
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+

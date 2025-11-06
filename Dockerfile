@@ -14,6 +14,9 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
+# Copy admin views to dist (EJS files are not compiled by TypeScript)
+RUN cp -r src/admin dist/
+
 # Expose port
 EXPOSE 3000
 

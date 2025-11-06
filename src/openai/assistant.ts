@@ -1,12 +1,36 @@
 import OpenAI from 'openai';
 import { readSystemPrompt } from '../utils/prompt';
+import { getThreadTTLMinutes } from '../utils/ttl';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 let assistantId: string | null = null;
-const userThreads = new Map<number, string>(); // userId -> threadId
+
+interface ThreadInfo {
+  threadId: string;
+  createdAt: number; // timestamp in milliseconds
+}
+
+const userThreads = new Map<number, ThreadInfo>(); // userId -> ThreadInfo
+
+// Clean up expired threads periodically
+function cleanupExpiredThreads(): void {
+  const ttlMinutes = getThreadTTLMinutes();
+  const ttlMs = ttlMinutes * 60 * 1000;
+  const now = Date.now();
+
+  for (const [userId, threadInfo] of userThreads.entries()) {
+    if (now - threadInfo.createdAt > ttlMs) {
+      userThreads.delete(userId);
+      console.log(`Thread expired for user ${userId}`);
+    }
+  }
+}
+
+// Run cleanup every 5 minutes
+setInterval(cleanupExpiredThreads, 5 * 60 * 1000);
 
 export async function getOrCreateAssistant(): Promise<string> {
   if (assistantId) {
@@ -32,12 +56,30 @@ export async function getOrCreateAssistant(): Promise<string> {
 }
 
 export async function getOrCreateThread(userId: number): Promise<string> {
-  if (userThreads.has(userId)) {
-    return userThreads.get(userId)!;
+  const threadInfo = userThreads.get(userId);
+  
+  if (threadInfo) {
+    // Check if thread is still valid (not expired)
+    const ttlMinutes = getThreadTTLMinutes();
+    const ttlMs = ttlMinutes * 60 * 1000;
+    const now = Date.now();
+    
+    if (now - threadInfo.createdAt <= ttlMs) {
+      return threadInfo.threadId;
+    } else {
+      // Thread expired, remove it
+      userThreads.delete(userId);
+      console.log(`Thread expired for user ${userId}, creating new one`);
+    }
   }
 
+  // Create new thread
   const thread = await openai.beta.threads.create();
-  userThreads.set(userId, thread.id);
+  userThreads.set(userId, {
+    threadId: thread.id,
+    createdAt: Date.now(),
+  });
+  
   return thread.id;
 }
 
@@ -99,4 +141,3 @@ export async function updateAssistantInstructions(): Promise<void> {
     instructions: systemPrompt || 'You are a helpful AI assistant.',
   });
 }
-
