@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: ai-tg-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./prompts:/app/prompts
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+
+
